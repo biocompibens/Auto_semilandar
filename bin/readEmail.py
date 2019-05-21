@@ -2,6 +2,7 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 import base64
+import quopri
 import email
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
@@ -26,9 +27,11 @@ def main():
         print("Message snippets:")
         for message in messages[:1]:
             msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
-	    msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
 
-    	   mime_msg = email.message_from_string(msg_str)
+            # base 62 renvoie un string encodé, mais la fonction par défaut de python ne peut pas le décoder...
+            msg_str = base64.urlsafe_b64decode(msg['raw'])
+
+            mime_msg = email.message_from_string(msg_str.decode())
 
             print(mime_msg)
            # for part in msg['payload']['parts']:
