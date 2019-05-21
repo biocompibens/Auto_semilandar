@@ -1,6 +1,8 @@
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+import base64
+import email
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
@@ -24,7 +26,11 @@ def main():
         print("Message snippets:")
         for message in messages[:1]:
             msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
-            print(msg)
+	    msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
+
+    	   mime_msg = email.message_from_string(msg_str)
+
+            print(mime_msg)
            # for part in msg['payload']['parts']:
             #    print(part['body'])
 
