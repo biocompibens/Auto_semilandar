@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from IPython import embed
+import sys
 import numpy as np
 
 from googleapiclient.discovery import build
@@ -39,7 +40,7 @@ test_event = {
 test_event2 = {
   'colorId' : '2',
   'summary': 'Hackathon test event',
-  'location': '45 rue dUlm',
+  'location': 'amphi Dussanne 45 rue dUlm',
   'description': 'Is it going to work ?',
   'start': {
     'dateTime': '2019-05-22T14:00:00',
@@ -182,9 +183,14 @@ def check_reminder(event, service):
 
 
                 print("end dateTime change")
-                event['end']['dateTime'] = startEvent + datetime.timedelta(seconds= evDuration.seconds )
+                event['end']['dateTime'] = (startEvent + datetime.timedelta(seconds= evDuration.seconds )).isoformat()
                 event['end']['timeZone'] = 'Europe/Paris'
-            service.events().update(calendarId=team_calendar,eventId = ev['id'], body = event).execute()
+
+
+            #embed()
+
+            service.events().update(calendarId=team_calendar, eventId = ev['id'], body = event).execute()
+
             return 1
 
     return 0
@@ -221,5 +227,9 @@ def update_event():
 
 if __name__ == '__main__':
     service_calendar, service_inbox = login()
-    create_new_event(service_calendar, test_event, calendar_id=team_calendar)
-    check_reminder(test_event2, service_calendar) #1 if a reminder else 0
+    try:
+        check_reminder(test_event, service_calendar) #1 if a reminder else 0
+        create_new_event(service_calendar, test_event, calendar_id=team_calendar)
+    except :
+
+        sys.sterr.write('fail')
