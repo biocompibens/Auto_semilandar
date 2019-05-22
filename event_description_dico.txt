@@ -1,0 +1,35 @@
+
+
+#source: https://developers.google.com/calendar/v3/reference/events#resource
+
+#### Here are the keys required to create/update an event, please fill out the keys that are NOT commented. 
+#### the keys that are commented will be filled later when the event is added. 
+
+
+event = {
+  "summary": string, #Title of the event
+  "description": string,#Description of the event--- add date on which the email was received
+  "location": string,
+  #"colorId": string,
+  "creator": {
+   "displayName": string, #email address of the person that sent the email
+   # "self": boolean #default value: True
+  },
+  "start": {
+   "dateTime": datetime, #The time, as a combined date-time value. EX: 2019-05-22T09:00:00'
+    #"timeZone": string #default value: 'Europe/Paris'
+  },
+  "end": {
+    "dateTime": datetime,
+    #"timeZone": string
+  },
+
+  "originalStartTime": { #for events that last all day	
+    "dateTime": datetime, #The date, in the format "yyyy-mm-dd", if this is an all-day event.
+    #"timeZone": string #default value: 'Europe/Paris'
+  }
+}
+
+  #,	"status": string, #default value: "confirmed". Possible other value "cancelled" 
+#}
+
