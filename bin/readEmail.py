@@ -1,69 +1,56 @@
-from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
 import base64
 from bs4 import BeautifulSoup
+from googleAPI import GoogleAPI
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
-def is_seminar(message_header):
-    seminar_words = ['seminar', 'workshop', 'thesis', 'defense', 'talk', 'séminaire', 'séminaires', 'thèse',
-                     'seminaire', 'seminaires', 'club', '']
+class GmailAPI(GoogleAPI):
+
+    def get_all_messages_id(self):
+        return [c["id"] for c in self.gmail.users().messages().list(
+            userId='me'
+        ).execute().get('messages', [])]
+
+
+    def get_message_payload(self, id):
+        return self.gmail.users().messages().get(
+            userId='me', id=id, format="full"
+        ).execute()['payload']
 
 
 
 def main():
-    store = file.Storage('token.json')
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
-        creds = tools.run_flow(flow, store)
-    service = build('gmail', 'v1', http=creds.authorize(Http()))
+    gmail = GmailAPI()
 
-    # Call the Gmail API to fetch INBOX
-    results = service.users().messages().list(
-        userId='me'
-    ).execute()
-    messages = results.get('messages', [])
+    messages = [gmail.get_message_payload(i)
+                for i in gmail.get_all_messages_id()]
 
-    if not messages:
-        print("No messages found.")
+    for message in messages:
+        if "parts" in message:  # multipart email (rare)
+            message = [c for c in message['parts'] if 'data' in c['body']]
+            # get body from all part
+            mimes = [c['mimeType'] for c in message]
+            # get mimetype from all part
+            try:
+                message = message[mimes.index('text/plain')]
+                mime = 'text/plain'
+                # try to get body in plain text
+            except (IndexError, ValueError):
+                message = message[0]  # fallback to first if not
+                mime = mimes[0]
+        else:
+            mime = message['mimeType']
 
-    else:
+        content = base64.urlsafe_b64decode(message['body']['data'])
 
-        for message in messages:
-            msg = service.users().messages().get(userId='me',
-                                                 id=message['id'],
-                                                 format="full").execute()
-            result = msg['payload']
-            # print(msg['payload']['headers'])
+        if mime == 'text/html':
+            content = BeautifulSoup(content.decode('utf-8'),
+                                    'html.parser').text
 
-            if "parts" in result:  # multipart email (rare)
-                result = [c for c in result['parts'] if 'data' in c['body']]
-                # get body from all part
-                mimes = [c['mimeType'] for c in result]
-                # get mimetype from all part
-                try:
-                    result = result[mimes.index('text/plain')]
-                    mime = 'text/plain'
-                    # try to get body in plain text
-                except (IndexError, ValueError):
-                    result = result[0]  # fallback to first if not
-                    mime = mimes[0]
-            else:
-                mime = result['mimeType']
-
-            content = base64.urlsafe_b64decode(result['body']['data'])
-
-            if mime == 'text/html':
-                content = BeautifulSoup(content.decode('utf-8'),
-                                        'html.parser').text
-            # print(content)
-
-            d = header_to_dict(result)
-            if check_headers_complete(d):
-                dico = mail_to_dict(d, content)
-                print(dico)
+        d = header_to_dict(message)
+        if check_headers_complete(d):
+            dico = mail_to_dict(d, content)
+            print(dico)
 
 def header_to_dict(header):
     res = {}
@@ -71,11 +58,9 @@ def header_to_dict(header):
         res[dic['name']] = dic['value']
     return res
 
-
 def check_headers_complete(dictio):
     return ('Date' in dictio.keys()) & ('Subject' in dictio.keys()) & ('To' in dictio.keys()) & (
-    'From' in dictio.keys())
-
+            'From' in dictio.keys())
 
 def mail_to_dict(header_dict, content):
     dico = {'From': header_dict['From'], 'To': header_dict['Date'], 'Date': header_dict['Date'],
