@@ -88,3 +88,30 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+#### Start of the final real script
+
+# Function to login
+def login():
+    return None
+#End login
+
+# Function process event
+def process_event():
+    return None
+# End process event
+
+# Function to check reminder
+def check_reminder():
+    return None
+# End check reminder
+
+# Function to create a new event
+def create_new_event():
+    return None
+# End create new event
+
+# Function update event
+def update_event():
+    return None
+# End update event
