@@ -1,4 +1,6 @@
 import base64
+import pickle
+
 from bs4 import BeautifulSoup
 from googleAPI import GoogleAPI
 
@@ -24,7 +26,7 @@ def main():
 
     messages = [gmail.get_message_payload(i)
                 for i in gmail.get_all_messages_id()]
-
+    result = []
     for message in messages:
         if "parts" in message:  # multipart email (rare)
             header = message['headers']
@@ -48,12 +50,14 @@ def main():
         if mime == 'text/html':
             content = BeautifulSoup(content.decode('utf-8'),
                                     'html.parser').text
-        print(header)
         d = header_to_dict(header)
-        print(d['Subject'])
         if check_headers_complete(d):
             dico = mail_to_dict(d, content)
             # print(dico)
+            result.append(dico)
+
+    with open('mail_dict', 'wb') as out:
+        pickle.dump(result, out)
 
 
 def header_to_dict(header):
