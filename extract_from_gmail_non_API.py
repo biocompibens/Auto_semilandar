@@ -11,7 +11,7 @@ import numpy as np
 import re
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
-import datefinder
+from dateparser.search import search_dates
 
 def get_continuous_chunks(text):
     chunked = ne_chunk(pos_tag(word_tokenize(text)))
@@ -85,10 +85,7 @@ for c in contents:
 
 
 for c in filter_contents:
-    matches = datefinder.find_dates(c[-1])
-    ner_ex = get_continuous_chunks(c)
-    print(ner_ex, end=', ')
-    for m in matches:
-        print(m, end=', ')
-
-
+    matches = dateparser.search.search_dates(c)
+    # ner_ex = get_continuous_chunks(c)
+    # print(ner_ex, end=', ')
+    print(matches, end='\n\n')
