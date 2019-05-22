@@ -9,5 +9,29 @@ class Template(object):
             self.render = virginie_template
 
 
-def virginie_template():
+def virginie_template(message):
+    """"""
+
+
+def neurosection(message):
+    """"""
+
+
+def colot(message):
+    """"""
+
+
+def Developmental(message):
+    """"""
+
+
+def bioinfo_seminar(message):
+    """"""
+
+
+def EEB(message):
+    """"""
+
+
+def hugues(message):
     """"""
