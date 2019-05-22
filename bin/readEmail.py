@@ -34,9 +34,9 @@ def main():
             mime_msg = email.message_from_string(msg_str.decode('iso-8859-1'))
             if mime_msg.is_multipart():
                 part = mime_msg.get_payload()[0]
-                char_set = part['Content-Type'].split('; ')[-1].split('=')[-1]
+                char_set = part['Content-Type'].split('charset=')[-1].split(';')[0].strip('"').lower()
             else:
-                char_set = mime_msg['Content-Type'].split('; ')[-1].split('=')[-1]
+                char_set = mime_msg['Content-Type'].split('charset=')[-1].split(';')[0].strip('"').lower()
 
             if mime_msg.is_multipart():
                 body = mime_msg.get_payload()[0].get_payload()
@@ -44,6 +44,7 @@ def main():
                 body = mime_msg.get_payload()
 
             print(body)
+            print(char_set)
 
             if char_set.lower() != 'iso-8859-1':
                 mime_msg = email.message_from_string(msg_str.decode(char_set))
