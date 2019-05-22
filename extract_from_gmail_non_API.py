@@ -57,6 +57,7 @@ for i in data[0].split():
     result, data2 = mail.uid('fetch', i, '(RFC822)')
     raw_email = data2[0][1]
     msg = email.message_from_string(raw_email.decode('iso-8859-1'))
+    print(msg)
     print(i, end=", ")
     if 'ENS-AllBio' in msg['Subject']:
         if msg.is_multipart():
