@@ -2,7 +2,7 @@ import base64
 import pickle
 
 from bs4 import BeautifulSoup
-from googleAPI import GoogleAPI
+from bin.googleAPI import GoogleAPI
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
