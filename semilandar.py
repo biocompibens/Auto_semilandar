@@ -88,12 +88,22 @@ def check_reminder():
 # Function to create a new event
 def create_new_event(service, event_dict, calendar_id=team_calendar):
     # Check the dictionary
-    print (type(event_dict))
+    if type(event_dict) is dict:
+        pass
+    else:
+        print ('Problem, didnt receive a dictionary!')
+        return
 
     print ('Creating new event...'),
     new_event = service.events().insert(calendarId=calendar_id, body=event_dict).execute()
     print ('[Done]')
 
+    print ('\nNew event created:')
+    print ('\t{}'.format(event_dict['summary']))
+    print ('\t{}'.format(event_dict['location']))
+    print ('\t{}'.format(event_dict['description']))
+    print ('\tfrom {} to {}'.format(event_dict['start']['dateTime'],
+    event_dict['end']['dateTime']))
     return None
 # End create new event
 
@@ -104,7 +114,5 @@ def update_event():
 
 
 if __name__ == '__main__':
-    main()
-    print ('Done main')
+    service = main()
     create_new_event(service, test_event, calendar_id=team_calendar)
-    print ('Done nex event')
