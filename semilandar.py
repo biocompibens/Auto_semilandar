@@ -25,10 +25,17 @@ test_event = {
   }
   }
 
+#TODO: update some fields
+
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-def main():
+
+
+
+
+# Function to login
+def login():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -53,26 +60,13 @@ def main():
 
     service = build('calendar', 'v3', credentials=creds)
 
-    # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-
-    page_token = None
-    while True:
-        calendar_list = service.calendarList().list(pageToken=page_token).execute()
-        for calendar_list_entry in calendar_list['items']:
-            page_token = calendar_list.get('nextPageToken')
-        if not page_token:
-            break
-
     return service
 
 
 
 #### Start of the final real script
 
-# Function to login
-def login():
-    return None
+
 #End login
 
 # Function process event
@@ -114,5 +108,5 @@ def update_event():
 
 
 if __name__ == '__main__':
-    service = main()
+    service = login()
     create_new_event(service, test_event, calendar_id=team_calendar)
