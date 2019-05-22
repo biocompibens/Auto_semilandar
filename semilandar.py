@@ -6,6 +6,14 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+# Imports from Toni inbox login
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
+import base64
+import quopri
+import email
+from bs4 import BeautifulSoup
 
 # This is the ID for the calendar we need to add events_result
 team_calendar = 'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
@@ -32,35 +40,68 @@ test_event=['end']['timeZone']='Europe/Paris'
 
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ['https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/gmail.readonly']
 
 
 # Function to login
 def login():
     print('Logging in...')
-    creds = None
+    creds_calendar = None
+    creds_inbox = None
+
+    #store_inbox = file.Storage('token_inbox.json')
+    #creds_inbox = store_inbox.get()
+
+    #store = file.Storage('token.json')
+    #creds = store.get()
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        print ('- Creating new credentials, check your browser!')
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server()
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+    if os.path.exists('token_calendar.pickle'):
+        with open('token_calendar.pickle', 'rb') as token_calendar:
+            creds_calendar = pickle.load(token_calendar)
 
-    service = build('calendar', 'v3', credentials=creds)
-    print ('[Done]')
-    return service
+    if os.path.exists('token_inbox.pickle'):
+        with open('token_inbox.pickle', 'rb') as token_inbox:
+            creds_inbox = pickle.load(token_inbox)
+
+
+    # If there are no (valid) credentials for INBOX available, let the user log in.
+    if not creds_inbox or not creds_inbox.valid:
+        print ('\n\nCreating new credentials for inbox, check your browser!')
+
+        #flow_inbox = client.flow_from_clientsecrets('credentials_inbox.json', SCOPES[1])
+        #creds_inbox = tools.run_flow(flow_inbox, store_inbox)
+
+        flow_inbox = InstalledAppFlow.from_client_secrets_file('credentials_inbox.json', SCOPES[1])
+        creds_inbox = flow_inbox.run_local_server()
+
+        with open('token_inbox.pickle', 'wb') as token_inbox:
+            pickle.dump(creds_inbox, token_inbox)
+
+        print ('[Done]')
+
+
+    # If there are no (valid) credentials for CALENDAR available, let the user log in.
+    if not creds_calendar or not creds_calendar.valid:
+        print ('\n\nCreating new credentials for calendar, check your browser!')
+        flow_calendar = InstalledAppFlow.from_client_secrets_file('credentials_calendar.json', SCOPES[0])
+        creds_calendar = flow_calendar.run_local_server()
+        print ('[Done]')
+
+
+        # Save the credentials for the next run
+        with open('token_calendar.pickle', 'wb') as token_calendar:
+            pickle.dump(creds_calendar, token_calendar)
+
+
+    service_calendar = build('calendar', 'v3', credentials=creds_calendar)
+    #service_inbox = build('gmail', 'v1', http=creds_inbox.authorize(Http()))
+    service_inbox = build('gmail', 'v1', credentials=creds_calendar)
+
+    print ('[All done !]')
+    return service_calendar, service_inbox
 
 #End login
 
@@ -103,8 +144,5 @@ def update_event():
 # End update event
 
 if __name__ == '__main__':
-    service = login()
-    create_new_event(service, test_event, calendar_id=team_calendar)
-
-
-
+    service_calendar, service_inbox = login()
+    create_new_event(service_calendar, test_event, calendar_id=team_calendar)
