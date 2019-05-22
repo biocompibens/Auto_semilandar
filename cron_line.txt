@@ -1,0 +1,10 @@
+#This file contains the entry line to crontab
+#This line will execute mainScript.py every half an hour, from now to eternity, and redirects stdout and stderr to files
+
+
+*/30 * * * * /path/to/mainScript.sh >> /tmp/mainScript.out 2>> /tmp/mainScript.err
+
+
+#TODO:
+#edit paths
+#edit contab on the server 
