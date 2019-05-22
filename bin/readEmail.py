@@ -18,13 +18,29 @@ class GmailAPI(GoogleAPI):
         ).execute()['payload']
 
 
+def header_to_dict(header):
+    res = {}
+    for dic in header:
+        res[dic['name']] = dic['value']
+    return res
 
-def main():
+
+def check_headers_complete(dictio):
+    return ('Date' in dictio.keys()) & ('Subject' in dictio.keys()) & ('To' in dictio.keys()) & (
+            'From' in dictio.keys())
+
+
+def mail_to_dict(header_dict, content):
+    dico = {'From': header_dict['From'], 'To': header_dict['To'],
+            'Date': header_dict['Date'], 'Subject': header_dict['Subject'],
+            'Body': content}
+    return dico
+
+def create_list_dictionary():
     gmail = GmailAPI()
 
-    messages = [gmail.get_message_payload(i)
-                for i in gmail.get_all_messages_id()]
-
+    messages = [gmail.get_message_payload(i) for i in gmail.get_all_messages_id()]
+    list_dictionary = []
     for message in messages:
         if "parts" in message:  # multipart email (rare)
             header = message['headers']
@@ -46,34 +62,16 @@ def main():
         content = base64.urlsafe_b64decode(message['body']['data'])
 
         if mime == 'text/html':
-            content = BeautifulSoup(content.decode('utf-8'),
-                                    'html.parser').text
+            content = BeautifulSoup(content.decode('utf-8'), 'html.parser').text
         print(header)
         d = header_to_dict(header)
         print(d['Subject'])
         if check_headers_complete(d):
             dico = mail_to_dict(d, content)
             # print(dico)
+            list_dictionary.append(dico)
+    return list_dictionary
 
 
-def header_to_dict(header):
-    res = {}
-    for dic in header:
-        res[dic['name']] = dic['value']
-    return res
 
 
-def check_headers_complete(dictio):
-    return ('Date' in dictio.keys()) & ('Subject' in dictio.keys()) & ('To' in dictio.keys()) & (
-            'From' in dictio.keys())
-
-
-def mail_to_dict(header_dict, content):
-    dico = {'From': header_dict['From'], 'To': header_dict['To'],
-            'Date': header_dict['Date'], 'Subject': header_dict['Subject'],
-            'Body': content}
-    return dico
-
-
-if __name__ == '__main__':
-    main()
