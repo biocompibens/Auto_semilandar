@@ -1,4 +1,6 @@
 import base64
+import pickle
+
 from bs4 import BeautifulSoup
 from googleAPI import GoogleAPI
 
@@ -62,10 +64,9 @@ def create_list_dictionary():
         content = base64.urlsafe_b64decode(message['body']['data'])
 
         if mime == 'text/html':
-            content = BeautifulSoup(content.decode('utf-8'), 'html.parser').text
-        print(header)
+            content = BeautifulSoup(content.decode('utf-8'),
+                                    'html.parser').text
         d = header_to_dict(header)
-        print(d['Subject'])
         if check_headers_complete(d):
             dico = mail_to_dict(d, content)
             # print(dico)
