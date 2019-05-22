@@ -42,7 +42,12 @@ def main():
                     myMSG=base64.urlsafe_b64decode(parts.get_payload().encode('utf-8')).decode()
                     print(myMSG)
                 if parts.get_content_type() == 'text/html':
-                    myMSG = BeautifulSoup(parts.get_payload().encode('iso-8859-1'), 'html.parser').text
+                    try:
+                        myMSG_html=base64.urlsafe_b64decode(parts.get_payload().encode('utf-8')).decode()
+                        myMSG = BeautifulSoup(myMSG_html, 'html.parser').text
+                    except:
+                        myMSG = BeautifulSoup(parts.get_payload().encode('iso-8859-1'), 'html.parser').text
+
                     print(myMSG)
 
 
