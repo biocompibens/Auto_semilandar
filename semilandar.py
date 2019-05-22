@@ -31,14 +31,9 @@ test_event = {
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
-
-
-
 # Function to login
 def login():
-    """Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next 10 events on the user's calendar.
-    """
+    print('Logging in...')
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -48,6 +43,7 @@ def login():
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
+        print ('- Creating new credentials, check your browser!')
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
@@ -59,13 +55,8 @@ def login():
             pickle.dump(creds, token)
 
     service = build('calendar', 'v3', credentials=creds)
-
+    print ('[Done]')
     return service
-
-
-
-#### Start of the final real script
-
 
 #End login
 
@@ -88,16 +79,17 @@ def create_new_event(service, event_dict, calendar_id=team_calendar):
         print ('Problem, didnt receive a dictionary!')
         return
 
-    print ('Creating new event...'),
+    # Creates the event
     new_event = service.events().insert(calendarId=calendar_id, body=event_dict).execute()
-    print ('[Done]')
 
-    print ('\nNew event created:')
+    # Prints a small log
+    print ('\n{} | New event created:'.format(datetime.date.today()))
     print ('\t{}'.format(event_dict['summary']))
     print ('\t{}'.format(event_dict['location']))
     print ('\t{}'.format(event_dict['description']))
     print ('\tfrom {} to {}'.format(event_dict['start']['dateTime'],
     event_dict['end']['dateTime']))
+
     return None
 # End create new event
 
@@ -105,7 +97,6 @@ def create_new_event(service, event_dict, calendar_id=team_calendar):
 def update_event():
     return None
 # End update event
-
 
 if __name__ == '__main__':
     service = login()
