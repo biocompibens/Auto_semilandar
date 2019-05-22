@@ -5,6 +5,10 @@ import base64
 import quopri
 import email
 from bs4 import BeautifulSoup
+import time
+import datetime
+from dateparser.search import search_dates
+import re
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
@@ -20,6 +24,7 @@ def main():
     # Call the Gmail API to fetch INBOX
     results = service.users().messages().list(userId='me', labelIds=['INBOX']).execute()
     messages = results.get('messages', [])
+    contents = []
 
     if not messages:
         print("No messages found.")
@@ -40,15 +45,20 @@ def main():
                 print(parts.get_content_type())
                 if parts.get_content_type() == 'text/plain':
                     myMSG=base64.urlsafe_b64decode(parts.get_payload().encode('utf-8')).decode()
-                    print(myMSG)
+                    # print(type(myMSG))
+                    contents.append(myMSG)
                 if parts.get_content_type() == 'text/html':
                     try:
                         myMSG_html=base64.urlsafe_b64decode(parts.get_payload().encode('utf-8')).decode()
                         myMSG = BeautifulSoup(myMSG_html, 'html.parser').text
+                        contents.append(myMSG)
                     except:
                         myMSG = BeautifulSoup(parts.get_payload().encode('iso-8859-1'), 'html.parser').text
+                        contents.append(myMSG)
+                # print(myMSG)
+                #print(type(myMSG))
+    print(contents)
 
-                    print(myMSG)
 
 
             # if mime_msg.is_multipart():
