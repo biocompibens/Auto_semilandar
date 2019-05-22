@@ -25,7 +25,11 @@ test_event = {
   }
   }
 
-#TODO: update some fields
+# Update some fields
+test_event=['start']['timeZone']='Europe/Paris'
+test_event=['end']['timeZone']='Europe/Paris'
+
+
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -101,3 +105,6 @@ def update_event():
 if __name__ == '__main__':
     service = login()
     create_new_event(service, test_event, calendar_id=team_calendar)
+
+
+
