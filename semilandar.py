@@ -9,7 +9,6 @@ from google.auth.transport.requests import Request
 
 # This is the ID for the calendar we need to add events_result
 team_calendar = 'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
-
 # This is a test event, to help with development
 test_event = {
   'colorId' : '2',
@@ -25,7 +24,6 @@ test_event = {
     'timeZone': 'Europe/Paris',
   }
   }
-
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -61,53 +59,14 @@ def main():
     page_token = None
     while True:
         calendar_list = service.calendarList().list(pageToken=page_token).execute()
-        print (calendar_list.keys())
         for calendar_list_entry in calendar_list['items']:
-
-            print (calendar_list_entry['summary'])
-            print (calendar_list_entry['id'])
-            print ('\n')
-
             page_token = calendar_list.get('nextPageToken')
         if not page_token:
             break
 
-
-    print('Getting the upcoming 10 events')
-    events_result = service.events().list(calendarId='p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com', timeMin=now,
-                                        maxResults=10, singleEvents=True,
-                                        orderBy='startTime').execute()
-    events = events_result.get('items', [])
-
-    if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
-
-    # Adding a new events
-    print ('\nAdding new event...')
-    our_id = 'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
-    event = {
-      'colorId' : '2',
-      'summary': 'HACKATHON CONTINUES',
-      'location': '46 rue dUlm',
-      'description': 'Is it going to work ?',
-      'start': {
-        'dateTime': '2019-05-22T09:00:00',
-        'timeZone': 'Europe/Paris',
-      },
-      'end': {
-        'dateTime': '2019-05-22T18:00:00',
-        'timeZone': 'Europe/Paris',
-      }
-      }
-    new_event = service.events().insert(calendarId=our_id, body=event).execute()
-    print ('Event created')
+    return service
 
 
-if __name__ == '__main__':
-    main()
 
 #### Start of the final real script
 
@@ -127,10 +86,12 @@ def check_reminder():
 # End check reminder
 
 # Function to create a new event
-def create_new_event(event_dict):
+def create_new_event(service, event_dict, calendar_id=team_calendar):
     # Check the dictionary
     print (type(event_dict))
+
     print ('Creating new event...'),
+    new_event = service.events().insert(calendarId=calendar_id, body=event_dict).execute()
     print ('[Done]')
 
     return None
@@ -140,3 +101,10 @@ def create_new_event(event_dict):
 def update_event():
     return None
 # End update event
+
+
+if __name__ == '__main__':
+    main()
+    print ('Done main')
+    create_new_event(service, test_event, calendar_id=team_calendar)
+    print ('Done nex event')
