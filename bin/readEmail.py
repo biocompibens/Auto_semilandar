@@ -24,16 +24,38 @@ def main():
         print("No messages found.")
 
     else:
-        print("Message snippets:")
-        for message in messages[:1]:
+
+        for message in messages[:2]:
             msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
 
             # base 62 renvoie un string encodé, mais la fonction par défaut de python ne peut pas le décoder...
             msg_str = base64.urlsafe_b64decode(msg['raw'])
 
-            mime_msg = email.message_from_string(msg_str.decode())
+            mime_msg = email.message_from_string(msg_str.decode('iso-8859-1'))
+            if mime_msg.is_multipart():
+                part = mime_msg.get_payload()[0]
+                char_set = part['Content-Type'].split('; ')[-1].split('=')[-1]
+            else:
+                char_set = mime_msg['Content-Type'].split('; ')[-1].split('=')[-1]
 
-            print(mime_msg)
+            if mime_msg.is_multipart():
+                body = mime_msg.get_payload()[0].get_payload()
+            else:
+                body = mime_msg.get_payload()
+
+            print(body)
+
+            if char_set.lower() != 'iso-8859-1':
+                mime_msg = email.message_from_string(msg_str.decode(char_set))
+
+            if mime_msg.is_multipart():
+                body = mime_msg.get_payload()[0].get_payload()
+            else:
+                body = mime_msg.get_payload()
+
+            print(body)
+
+
            # for part in msg['payload']['parts']:
             #    print(part['body'])
 
