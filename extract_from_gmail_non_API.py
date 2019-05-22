@@ -77,7 +77,7 @@ def get_mails_seminar_like(seminar_words=['seminar', 'workshop', 'thesis', 'defe
 
 
 
-    # seminar_words = ['seminar', 'workshop', 'thesis', 'defense', 'talk']
+    seminar_words = ['seminar', 'workshop', 'thesis', 'defense', 'talk', 'séminaire', 'séminaires', 'thèse', 'seminaire', 'seminaires']
     filter_contents = []
     for c in contents:
         tests = [re.search(w, c, re.IGNORECASE) for w in seminar_words]
