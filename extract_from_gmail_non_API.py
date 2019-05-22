@@ -1,5 +1,5 @@
 
-## author: Auguste
+## authors: Auguste, France
 
 import smtplib
 import time
@@ -7,7 +7,33 @@ import imaplib
 import email
 import sys
 from bs4 import BeautifulSoup
+import numpy as np
+import re
+from nltk import ne_chunk, pos_tag, word_tokenize
+from nltk.tree import Tree
+import datefinder
 
+def get_continuous_chunks(text):
+    chunked = ne_chunk(pos_tag(word_tokenize(text)))
+    continuous_chunk = []
+    current_chunk = []
+    for i in chunked:
+            if type(i) == Tree:
+                    current_chunk.append(" ".join([token for token, pos in i.leaves()]))
+            elif current_chunk:
+                    named_entity = " ".join(current_chunk)
+                    if named_entity not in continuous_chunk:
+                            continuous_chunk.append(named_entity)
+                            current_chunk = []
+            else:
+                    continue
+    return continuous_chunk
+
+
+
+###########################################################################
+### 
+###########################################################################
 
 ORG_EMAIL   = "@gmail.com"
 FROM_EMAIL  = "biocompibens" + ORG_EMAIL
@@ -36,7 +62,7 @@ for i in data[0].split():
         if msg.is_multipart():
             contents.append('')
             for part in msg.get_payload():
-                print(part.get_content_type())
+                # print(part.get_content_type())
                 if part.get_content_type() == "text/plain":
                     contents[-1] += part.get_payload()
                 elif part.get_content_type() == "text/html":
@@ -46,10 +72,22 @@ for i in data[0].split():
                 contents.append(msg.get_payload())
             elif msg.get_content_type() == "text/html":
                 contents.append(BeautifulSoup(msg.get_payload()).text)
-        if i == 5:
-            sys.exit(0)
 
 
 
+seminar_words = ['seminar', 'workshop', 'thesis', 'defense', 'talk']
+filter_contents = []
+for c in contents:
+    tests = [re.search(w, c, re.IGNORECASE) for w in seminar_words]
+    if np.any(tests):
+        filter_contents.append(c)
+
+
+for c in filter_contents:
+    matches = datefinder.find_dates(c[-1])
+    ner_ex = get_continuous_chunks(c)
+    print(ner_ex, end=', ')
+    for m in matches:
+        print(m, end=', ')
 
 
