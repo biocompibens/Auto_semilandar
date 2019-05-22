@@ -6,6 +6,11 @@ from bs4 import BeautifulSoup
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
+def is_seminar(message_header):
+    seminar_words = ['seminar', 'workshop', 'thesis', 'defense', 'talk', 'séminaire', 'séminaires', 'thèse',
+                     'seminaire', 'seminaires', 'club', '']
+
+
 
 def main():
     store = file.Storage('token.json')
@@ -31,6 +36,7 @@ def main():
                                                  id=message['id'],
                                                  format="full").execute()
             result = msg['payload']
+            # print(msg['payload']['headers'])
 
             if "parts" in result:  # multipart email (rare)
                 result = [c for c in result['parts'] if 'data' in c['body']]
@@ -52,9 +58,29 @@ def main():
             if mime == 'text/html':
                 content = BeautifulSoup(content.decode('utf-8'),
                                         'html.parser').text
-            print(content)
+            # print(content)
+
+            d = header_to_dict(result)
+            if check_headers_complete(d):
+                dico = mail_to_dict(d, content)
+                print(dico)
+
+def header_to_dict(header):
+    res = {}
+    for dic in header['headers']:
+        res[dic['name']] = dic['value']
+    return res
 
 
+def check_headers_complete(dictio):
+    return ('Date' in dictio.keys()) & ('Subject' in dictio.keys()) & ('To' in dictio.keys()) & (
+    'From' in dictio.keys())
+
+
+def mail_to_dict(header_dict, content):
+    dico = {'From': header_dict['From'], 'To': header_dict['Date'], 'Date': header_dict['Date'],
+            'Subject': header_dict['Subject'], 'Body': content}
+    return dico
 
 if __name__ == '__main__':
     main()
