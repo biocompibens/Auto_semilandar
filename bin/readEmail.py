@@ -27,6 +27,7 @@ def main():
 
     for message in messages:
         if "parts" in message:  # multipart email (rare)
+            header = message['headers']
             message = [c for c in message['parts'] if 'data' in c['body']]
             # get body from all part
             mimes = [c['mimeType'] for c in message]
@@ -40,32 +41,39 @@ def main():
                 mime = mimes[0]
         else:
             mime = message['mimeType']
+            header = message['headers']
 
         content = base64.urlsafe_b64decode(message['body']['data'])
 
         if mime == 'text/html':
             content = BeautifulSoup(content.decode('utf-8'),
                                     'html.parser').text
-
-        d = header_to_dict(message)
+        print(header)
+        d = header_to_dict(header)
+        print(d['Subject'])
         if check_headers_complete(d):
             dico = mail_to_dict(d, content)
-            print(dico)
+            # print(dico)
+
 
 def header_to_dict(header):
     res = {}
-    for dic in header['headers']:
+    for dic in header:
         res[dic['name']] = dic['value']
     return res
+
 
 def check_headers_complete(dictio):
     return ('Date' in dictio.keys()) & ('Subject' in dictio.keys()) & ('To' in dictio.keys()) & (
             'From' in dictio.keys())
 
+
 def mail_to_dict(header_dict, content):
-    dico = {'From': header_dict['From'], 'To': header_dict['Date'], 'Date': header_dict['Date'],
-            'Subject': header_dict['Subject'], 'Body': content}
+    dico = {'From': header_dict['From'], 'To': header_dict['To'],
+            'Date': header_dict['Date'], 'Subject': header_dict['Subject'],
+            'Body': content}
     return dico
+
 
 if __name__ == '__main__':
     main()
