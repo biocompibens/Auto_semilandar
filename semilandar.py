@@ -5,6 +5,8 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from IPython import embed
+import numpy as np
 
 
 # This is the ID for the calendar we need to add events_result
@@ -20,7 +22,22 @@ test_event = {
     'timeZone': 'Europe/Paris',
   },
   'end': {
-    'dateTime': '2019-05-22T11:00:00',
+    'dateTime': '2019-05-22T19:00:00',
+    'timeZone': 'Europe/Paris',
+  }
+  }
+
+test_event2 = {
+  'colorId' : '2',
+  'summary': 'Hackathon test event',
+  'location': '45 rue dUlm',
+  'description': 'Is it going to work ?',
+  'start': {
+    'dateTime': '2019-05-22T14:00:00',
+    'timeZone': 'Europe/Paris',
+  },
+  'end': {
+    'dateTime': '2019-05-22T20:00:00',
     'timeZone': 'Europe/Paris',
   }
   }
@@ -69,54 +86,62 @@ def process_event():
 def check_reminder(event, service):
     import Levenshtein
     # use pip install python-Levenshtein
-    events_result = service.events().list(calendarId=team_calendar, timeMin=now, singleEvents=True,
-                                        orderBy='startTime').execute()#'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
-	for ev in events_results:
-    	strDist = Levenshtein.distance(event['summary'], ev['summary'])
-		pourcentageSimilarities = 100 *strDist/float(len(event['summary']))
-		if pourcentageSimilarities >= 80. :
-			flagLoc = 0
-			flagDate = 0
-			flagTimeStart = 0
-			locDist = Levenshtein.distance(event['location'], ev['location'])
-			locPourcentageSimilarities = 100 * locDist/float(len(event['location']))
-			if locPourcentageSimilarities <= 80. :
-				print("location change from : " +ev['location'] + " to : " +event['location'])
-				#ev['location'] = event['location'] 
-				flagLoc = 1
-			dateDist = Levenshtein.distance(event['dateTime'], ev['locationTime'])
-			if dateDist != 0 :
-				print("start dateTime change from : " +ev['start']['dateTime'] + " to : " +event['start']['dateTime'])
-				#ev['start']['dateTime'] = event['start']['dateTime']
+    events_result = service.events().list(calendarId=team_calendar, timeMin= datetime.datetime.utcnow().isoformat() + 'Z' , singleEvents=True,
+                                        orderBy='startTime').execute()#'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'# 'Z' indicates UTC time
 
-				flagDate = 1
-				startEvent = datetime.datetime.fromisoformat(event['start']['dateTime'])
-				start_dateEvent = startEvent.strftime("%Y-%m-%d")
-				start_timeEvent = startEvent.strftime("%H:%M:%S")
+    for ev in events_result['items']:
+        #print( ev['summary'])
+        #embed()
+        lenMinSeq = np.min([len(event['summary']),len(ev['summary'])])
+        strDist = Levenshtein.distance(unicode(event['summary'], 'utf-8').lower(), ev['summary'].lower())
+        pourcentageSimilarities = strDist/1 #float(lenMinSeq)
+        if pourcentageSimilarities <= 5 :
+            print("event already present")
+            print( ev['summary'])
+            embed()
+            flagLoc = 0
+            flagDate = 0
+            flagTimeStart = 0
+            locDist = Levenshtein.distance(str(event['location']), str(ev['location']))
+            locPourcentageSimilarities = 100 * locDist/float(len(event['location']))
+            if locPourcentageSimilarities <= 80. :
+                print("location change from : " +ev['location'] + " to : " +event['location'])
+                #ev['location'] = event['location'] 
+                flagLoc = 1
+            dateDist = Levenshtein.distance(str(event['start']['dateTime']), str(ev['start']['dateTime']))
+            if dateDist != 0 :
+                print("start dateTime change from : " +ev['start']['dateTime'] + " to : " +event['start']['dateTime'])
+                #ev['start']['dateTime'] = event['start']['dateTime']
 
-
-				startEv = datetime.datetime.fromisoformat(ev['start']['dateTime'])
-				start_dateEv = startEv.strftime("%Y-%m-%d")
-				start_timeEv = startEv.strftime("%H:%M:%S")
-
-				endEv = datetime.datetime.fromisoformat(ev['end']['dateTime'])
-				end_dateEv = endEv.strftime("%Y-%m-%d")
-				end_timeEv = endEv.strftime("%H:%M:%S")
-
-				formatTime = '%H:%M:%S'
-				evDuration = datetime.strptime(end_timeEv, formatTime) - datetime.strptime(start_timeEv, formatTime)
-				evDurationH = datetime.strftime(evDuration ,'%H')
-				evDurationM = datetime.strftime(evDuration ,'%M')
+                flagDate = 1
+                startEvent = datetime.datetime.fromisoformat(event['start']['dateTime'])
+                start_dateEvent = startEvent.strftime("%Y-%m-%d")
+                start_timeEvent = startEvent.strftime("%H:%M:%S")
 
 
+                startEv = datetime.datetime.fromisoformat(ev['start']['dateTime'])
+                start_dateEv = startEv.strftime("%Y-%m-%d")
+                start_timeEv = startEv.strftime("%H:%M:%S")
+
+                endEv = datetime.datetime.fromisoformat(ev['end']['dateTime'])
+                end_dateEv = endEv.strftime("%Y-%m-%d")
+                end_timeEv = endEv.strftime("%H:%M:%S")
+
+                formatTime = '%H:%M:%S'
+                evDuration = datetime.strptime(end_timeEv, formatTime) - datetime.strptime(start_timeEv, formatTime)
+                evDurationH = datetime.strftime(evDuration ,'%H')
+                evDurationM = datetime.strftime(evDuration ,'%M')
 
 
-				print("end dateTime change")
-				event['end']['dateTime'] = event['start']['dateTime'] + datetime.detlatime(minutes= evDurationM,hours = evDurationH )
-				event['end']['timeZone'] = 'Europe/Paris'
-			service.events().update(calendarId=team_calendar,eventId = ev['id'], body = event).execute()
-			
-    return None
+
+
+                print("end dateTime change")
+                event['end']['dateTime'] = event['start']['dateTime'] + datetime.detlatime(minutes= evDurationM,hours = evDurationH )
+                event['end']['timeZone'] = 'Europe/Paris'
+            service.events().update(calendarId=team_calendar,eventId = ev['id'], body = event).execute()
+            return 1
+
+    return 0
 # End check reminder
 
 # Function to create a new event
@@ -151,3 +176,4 @@ def update_event():
 if __name__ == '__main__':
     service = login()
     create_new_event(service, test_event, calendar_id=team_calendar)
+    check_reminder(test_event2, service) #1 if a reminder else 0
