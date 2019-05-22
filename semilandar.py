@@ -7,6 +7,26 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 
+# This is the ID for the calendar we need to add events_result
+team_calendar = 'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
+
+# This is a test event, to help with development
+test_event = {
+  'colorId' : '2',
+  'summary': 'Hackathon test event',
+  'location': '46 rue dUlm',
+  'description': 'Is it going to work ?',
+  'start': {
+    'dateTime': '2019-05-22T09:00:00',
+    'timeZone': 'Europe/Paris',
+  },
+  'end': {
+    'dateTime': '2019-05-22T11:00:00',
+    'timeZone': 'Europe/Paris',
+  }
+  }
+
+
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -107,7 +127,12 @@ def check_reminder():
 # End check reminder
 
 # Function to create a new event
-def create_new_event():
+def create_new_event(event_dict):
+    # Check the dictionary
+    print (type(event_dict))
+    print ('Creating new event...'),
+    print ('[Done]')
+
     return None
 # End create new event
 
