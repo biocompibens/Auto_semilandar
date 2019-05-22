@@ -8,7 +8,6 @@ from google.auth.transport.requests import Request
 from IPython import embed
 import numpy as np
 
-# Imports from Toni inbox login
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -16,6 +15,8 @@ import base64
 import quopri
 import email
 from bs4 import BeautifulSoup
+
+import Levenshtein # use pip install python-Levenshtein
 
 # This is the ID for the calendar we need to add events_result
 team_calendar = 'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'
@@ -51,8 +52,8 @@ test_event2 = {
   }
 
 # Update some fields
-test_event=['start']['timeZone']='Europe/Paris'
-test_event=['end']['timeZone']='Europe/Paris'
+test_event['start']['timeZone']='Europe/Paris'
+test_event['end']['timeZone']='Europe/Paris'
 
 
 
@@ -129,8 +130,8 @@ def process_event():
 
 # Function to check reminder
 def check_reminder(event, service):
-    import Levenshtein
-    # use pip install python-Levenshtein
+
+
     events_result = service.events().list(calendarId=team_calendar, timeMin= datetime.datetime.utcnow().isoformat() + 'Z' , singleEvents=True,
                                         orderBy='startTime').execute()#'p6o50l43pqssqamaip3kdb3k4g@group.calendar.google.com'# 'Z' indicates UTC time
 
@@ -138,12 +139,11 @@ def check_reminder(event, service):
         #print( ev['summary'])
         #embed()
         lenMinSeq = np.min([len(event['summary']),len(ev['summary'])])
-        strDist = Levenshtein.distance(unicode(event['summary'], 'utf-8').lower(), ev['summary'].lower())
+        strDist = Levenshtein.distance(event['summary'].lower(), ev['summary'].lower())
         pourcentageSimilarities = strDist/1 #float(lenMinSeq)
         if pourcentageSimilarities <= 5 :
-            print("event already present")
-            print( ev['summary'])
-            embed()
+            print('The event -{}- is already present!'.format(ev['summary']))
+
             flagLoc = 0
             flagDate = 0
             flagTimeStart = 0
@@ -151,7 +151,7 @@ def check_reminder(event, service):
             locPourcentageSimilarities = 100 * locDist/float(len(event['location']))
             if locPourcentageSimilarities <= 80. :
                 print("location change from : " +ev['location'] + " to : " +event['location'])
-                #ev['location'] = event['location'] 
+                #ev['location'] = event['location']
                 flagLoc = 1
             dateDist = Levenshtein.distance(str(event['start']['dateTime']), str(ev['start']['dateTime']))
             if dateDist != 0 :
@@ -173,15 +173,16 @@ def check_reminder(event, service):
                 end_timeEv = endEv.strftime("%H:%M:%S")
 
                 formatTime = '%H:%M:%S'
-                evDuration = datetime.strptime(end_timeEv, formatTime) - datetime.strptime(start_timeEv, formatTime)
-                evDurationH = datetime.strftime(evDuration ,'%H')
-                evDurationM = datetime.strftime(evDuration ,'%M')
+                evDuration = datetime.datetime.strptime(end_timeEv, formatTime) - datetime.datetime.strptime(start_timeEv, formatTime)
+                #embed()
+                #evDurationH = datetime.datetime.strftime(evDuration ,'%H')
+                #evDurationM = datetime.datetime.strftime(evDuration ,'%M')
 
 
 
 
                 print("end dateTime change")
-                event['end']['dateTime'] = event['start']['dateTime'] + datetime.detlatime(minutes= evDurationM,hours = evDurationH )
+                event['end']['dateTime'] = startEvent + datetime.timedelta(seconds= evDuration.seconds )
                 event['end']['timeZone'] = 'Europe/Paris'
             service.events().update(calendarId=team_calendar,eventId = ev['id'], body = event).execute()
             return 1
